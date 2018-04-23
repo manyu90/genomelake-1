@@ -16,6 +16,9 @@ def makedirs(path, mode=0777, exist_ok=False):
 
 
 cdef inline int char2index(char ch) except -2:
+    allowed_chars = ['R','Y','S','W','K','M','B','D','H','V','N']
+    allowed_chars = [x.lower() for x in allowed_chars] + allowed_chars
+    allowed_ascii_vals = set([ord(x) for x in allowed_chars])
     if ch == 'A' or ch == 'a':
         return 0
     if ch == 'C' or ch == 'c':
@@ -24,9 +27,11 @@ cdef inline int char2index(char ch) except -2:
         return 2
     if ch == 'T' or ch == 't':
         return 3
-    if ch == 'N' or ch == 'n':
+    if ch in allowed_ascii_vals or chr(ch) in allowed_chars:
         return -1
-    raise ValueError('Invalid base encountered.')
+    else:
+        print("Character ecountered is {}".format(ch))
+        raise ValueError('Invalid base encountered.')
 
 
 cpdef void one_hot_encode_sequence(str seq, float[:, :] encoded) except *:
@@ -40,8 +45,11 @@ cpdef void one_hot_encode_sequence(str seq, float[:, :] encoded) except *:
         raise ValueError('encoded array needs to have 4 columns')
     
     for base in seq:
-        col_idx = char2index(ord(base))
-
+        try:
+            col_idx = char2index(ord(base))
+        except Exception as e:
+            print(e)
+            raise e 
         if col_idx >= 0:
             encoded[row_idx, col_idx] = 1
         else:
