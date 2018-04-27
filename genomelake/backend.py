@@ -24,7 +24,7 @@ _array_writer = {
 }
 
 
-def extract_fasta_to_file(fasta, output_dir, mode='bcolz', overwrite=False):
+def extract_fasta_to_file(fasta, output_dir, mode='2D_transpose_bcolz', overwrite=False):
     assert mode in _array_writer
 
     makedirs(output_dir, exist_ok=overwrite)
@@ -34,9 +34,10 @@ def extract_fasta_to_file(fasta, output_dir, mode='bcolz', overwrite=False):
         data = np.zeros((size, NUM_SEQ_CHARS), dtype=np.float32)
         seq = fasta_file.fetch(chrom)
         one_hot_encode_sequence(seq, data)
-        data_transpose = np.transpose(data)  #This extra transpose is needed to make the shapes (4,intervals) to make it consistent with my genomeflow version
-        file_shapes[chrom] = data_transpose.shape
-        _array_writer[mode](data_transpose, os.path.join(output_dir, chrom))
+        shape = data.shape
+        shape_transpose = [shape[1],shape[0]]  #Getting the shape of the transposed data matrix
+        file_shapes[chrom] = shape_transpose  
+        _array_writer[mode](data, os.path.join(output_dir, chrom)) #We have the metadata shape to be the transposed shape 
 
     with open(os.path.join(output_dir, 'metadata.json'), 'w') as fp:
         json.dump({'file_shapes': file_shapes,
