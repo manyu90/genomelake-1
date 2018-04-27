@@ -34,8 +34,9 @@ def extract_fasta_to_file(fasta, output_dir, mode='bcolz', overwrite=False):
         data = np.zeros((size, NUM_SEQ_CHARS), dtype=np.float32)
         seq = fasta_file.fetch(chrom)
         one_hot_encode_sequence(seq, data)
-        file_shapes[chrom] = data.shape
-        _array_writer[mode](data, os.path.join(output_dir, chrom))
+        data_transpose = np.transpose(data)  #This extra transpose is needed to make the shapes (4,intervals) to make it consistent with my genomeflow version
+        file_shapes[chrom] = data_transpose.shape
+        _array_writer[mode](data_transpose, os.path.join(output_dir, chrom))
 
     with open(os.path.join(output_dir, 'metadata.json'), 'w') as fp:
         json.dump({'file_shapes': file_shapes,
