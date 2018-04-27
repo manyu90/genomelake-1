@@ -20,8 +20,11 @@ _blosc_params = bcolz.cparams(clevel=5, shuffle=bcolz.SHUFFLE, cname='lz4')
 _array_writer = {
     'numpy': lambda arr, path: np.save(path, arr),
     'bcolz': lambda arr, path: bcolz.carray(
+        arr, rootdir=path, cparams=_blosc_params, mode='w').flush(),
+    '2D_transpose_bcolz': lambda arr, path: bcolz.carray(
         arr, rootdir=path, cparams=_blosc_params, mode='w').flush()
-}
+    }
+
 
 
 def extract_fasta_to_file(fasta, output_dir, mode='2D_transpose_bcolz', overwrite=False):
@@ -35,7 +38,7 @@ def extract_fasta_to_file(fasta, output_dir, mode='2D_transpose_bcolz', overwrit
         seq = fasta_file.fetch(chrom)
         one_hot_encode_sequence(seq, data)
         shape = data.shape
-        shape_transpose = [shape[1],shape[0]]  #Getting the shape of the transposed data matrix
+        shape_transpose = shape[::-1] 
         file_shapes[chrom] = shape_transpose  
         _array_writer[mode](data, os.path.join(output_dir, chrom)) #We have the metadata shape to be the transposed shape 
 
