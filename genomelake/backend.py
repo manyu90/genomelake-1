@@ -107,6 +107,20 @@ def load_directory(base_dir, in_memory=False):
                 raise ValueError('Inconsistent shape found in metadata file: '
                                  '{} - {} vs {}'.format(chrom, shape,
                                                         data[chrom].shape))
+    #Also provide the suppport to read this transposed datatype(where we save in shape N*4 but metadata shapes are 4*N) as this 
+    #the way genomelake currently stores the data . It is also what my version of genomeflow expects
+    elif metadata['type'] == 'array_2D_transpose_bcolz':
+        data = {chrom: bcolz.open(os.path.join(base_dir, chrom), mode='r')
+                for chrom in metadata['file_shapes']}
+        if in_memory:
+            data = {k: data[k].copy() for k in data.keys()}
+
+        for chrom, shape in six.iteritems(metadata['file_shapes']):
+            if data[chrom].shape != tuple(shape[::-1]):
+                raise ValueError('Inconsistent shape found in metadata file: '
+                                 '{} - {} vs {}'.format(chrom, shape,
+                                                        data[chrom].shape))
+
     else:
         raise ValueError('Can only extract from array_bcolz and array_numpy')
 
